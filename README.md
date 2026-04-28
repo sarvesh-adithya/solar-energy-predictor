@@ -60,7 +60,12 @@ A machine learning powered web application that predicts solar energy production
 ---
 
 ## 📸 Screenshot
-<img width="1919" height="787" alt="image" src="https://github.com/user-attachments/assets/b8a9984b-9245-4345-9355-c2d2d419fa29" />
+<img width="1904" height="658" alt="Screenshot 2026-04-28 125014" src="https://github.com/user-attachments/assets/5315d540-cd27-48b9-b43a-ced5e6ab6078" />
+<img width="1903" height="774" alt="Screenshot 2026-04-28 125038" src="https://github.com/user-attachments/assets/57d2f15f-69c7-4d3e-a319-c0d41a632d8e" />
+<img width="1919" height="787" alt="Screenshot 2026-04-28 125050" src="https://github.com/user-attachments/assets/f3221eb8-5b46-4025-a144-4b6661d59c1d" />
+
+
+
 
 
 
