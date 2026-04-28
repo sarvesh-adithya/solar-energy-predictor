@@ -14,7 +14,7 @@ st.set_page_config(page_title="Solar AI Predictor", layout="wide")
 # HEADER
 # -------------------------------
 st.title("⚡ Smart Solar Output Prediction System")
-st.caption("AI-powered solar energy prediction with insights & analytics")
+st.caption("AI-powered solar energy prediction with financial & environmental insights")
 
 # -------------------------------
 # INPUT SECTION
@@ -28,6 +28,7 @@ with col1:
 
 with col2:
     year = st.number_input("Interconnection Year", 2000, 2026, 2020)
+
     developer = st.selectbox(
         "Developer",
         [
@@ -36,6 +37,7 @@ with col2:
             "Vivint Solar","SolarCity","Unknown"
         ]
     )
+
     zip_code = st.text_input("Zip Code", "11418")
 
 # -------------------------------
@@ -44,11 +46,16 @@ with col2:
 if st.button("🚀 Predict Energy Output"):
 
     try:
+        # -------------------------------
         # Feature Engineering
+        # -------------------------------
         dc_ac_ratio = dc_size / (pv_size + 1e-6)
         storage_ratio = storage / (pv_size + 1e-6)
         system_age = 2026 - year
 
+        # -------------------------------
+        # DataFrame
+        # -------------------------------
         input_df = pd.DataFrame({
             'PV System Size (kWac)': [pv_size],
             'Estimated PV System Size (kWdc)': [dc_size],
@@ -74,12 +81,15 @@ if st.button("🚀 Predict Energy Output"):
             'developer_performance': [0]
         })
 
+        # -------------------------------
+        # Prediction
+        # -------------------------------
         pred_log = model.predict(input_df)
         prediction = np.expm1(pred_log)[0]
         monthly = prediction / 12
 
         # -------------------------------
-        # KPI DASHBOARD
+        # KPI CARDS
         # -------------------------------
         c1, c2, c3 = st.columns(3)
         c1.metric("⚡ Annual Output", f"{int(prediction):,} kWh")
@@ -89,14 +99,20 @@ if st.button("🚀 Predict Energy Output"):
         # -------------------------------
         # CO2 SAVINGS
         # -------------------------------
-        co2_saved = prediction * 0.7 / 1000  # tons/year
+        co2_saved = prediction * 0.7 / 1000
         st.success(f"🌱 CO₂ Saved: {co2_saved:.2f} tons/year")
 
         # -------------------------------
-        # COST SAVINGS
+        # COST SAVINGS (UPDATED ✅)
         # -------------------------------
-        savings = prediction * 0.12  # assume ₹ per kWh
+        savings = prediction * 6
         st.info(f"💰 Estimated Yearly Savings: ₹{int(savings):,}")
+
+        # -------------------------------
+        # PAYBACK PERIOD
+        # -------------------------------
+        payback_years = 200000 / savings
+        st.write(f"💸 Estimated Payback Period: {payback_years:.1f} years")
 
         # -------------------------------
         # EFFICIENCY
@@ -115,14 +131,17 @@ if st.button("🚀 Predict Energy Output"):
             st.success("🔥 High performance solar system")
 
         # -------------------------------
-        # MONTHLY GRAPH
+        # REALISTIC MONTHLY GRAPH ☀️
         # -------------------------------
+        season_factor = [0.8, 0.85, 0.95, 1.05, 1.1, 1.15, 1.2, 1.15, 1.05, 0.95, 0.85, 0.8]
+        monthly_values = [monthly * f for f in season_factor]
+
         monthly_data = pd.DataFrame({
             "Month": [
                 "Jan","Feb","Mar","Apr","May","Jun",
                 "Jul","Aug","Sep","Oct","Nov","Dec"
             ],
-            "kWh": [monthly] * 12
+            "kWh": monthly_values
         })
 
         st.subheader("📈 Monthly Production Trend")
