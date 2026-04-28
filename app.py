@@ -17,7 +17,7 @@ st.title("⚡ Smart Solar Output Prediction System")
 st.write("Enter system details to predict annual energy production")
 
 # ------------------------
-# INPUT SECTION (2 columns)
+# INPUT SECTION
 # ------------------------
 col1, col2 = st.columns(2)
 
@@ -51,7 +51,7 @@ with col2:
     zip_code = st.text_input("Zip Code", "10001")
 
 # ------------------------
-# PREDICT BUTTON
+# PREDICTION BUTTON
 # ------------------------
 if st.button("🚀 Predict Energy Output"):
 
@@ -64,7 +64,7 @@ if st.button("🚀 Predict Energy Output"):
         system_age = 2026 - year
 
         # ------------------------
-        # DataFrame (MATCH MODEL)
+        # Input DataFrame
         # ------------------------
         input_df = pd.DataFrame({
             'PV System Size (kWac)': [pv_size],
@@ -111,13 +111,28 @@ if st.button("🚀 Predict Energy Output"):
         k3.metric("🔋 System Size", f"{pv_size:.1f} kW")
 
         # ------------------------
-        # ENVIRONMENT + SAVINGS
+        # REALISTIC SAVINGS & ROI
         # ------------------------
-        co2_saved = prediction * 0.0007
-        savings = prediction * 0.12
+        electricity_rate = 7  # ₹ per kWh (India realistic)
+        savings = prediction * electricity_rate
 
-        st.success(f"🌱 CO₂ Saved: {co2_saved:.2f} tons/year")
+        cost_per_kw = 65000  # ₹ per kW
+        investment = pv_size * cost_per_kw
+
+        roi_years = investment / savings if savings != 0 else 0
+
+        st.success(f"🌱 CO₂ Saved: {(prediction * 0.0007):.2f} tons/year")
         st.info(f"💰 Estimated Yearly Savings: ₹{int(savings):,}")
+
+        st.metric("📊 ROI Period", f"{roi_years:.1f} years")
+
+        # ROI feedback
+        if roi_years < 4:
+            st.success("🚀 Excellent investment — very fast ROI")
+        elif roi_years < 7:
+            st.info("👍 Good investment with reasonable ROI")
+        else:
+            st.warning("⚠️ ROI is slow — consider optimizing system")
 
         # ------------------------
         # EFFICIENCY
@@ -133,14 +148,6 @@ if st.button("🚀 Predict Energy Output"):
         score = min(100, int((prediction / 8000) * 100))
         st.progress(score)
         st.write(f"Performance Score: {score}/100")
-
-        # ------------------------
-        # ROI CALCULATION
-        # ------------------------
-        investment = pv_size * 50000
-        roi_years = investment / savings if savings != 0 else 0
-
-        st.metric("📊 ROI Period", f"{roi_years:.1f} years")
 
         # ------------------------
         # SYSTEM STATUS
@@ -165,17 +172,22 @@ if st.button("🚀 Predict Energy Output"):
             st.success("✅ Your system configuration is optimized")
 
         # ------------------------
-        # MONTHLY TREND (FIXED ORDER)
+        # MONTHLY TREND (REALISTIC)
         # ------------------------
         st.subheader("📈 Monthly Production Trend")
 
-        monthly_values = np.random.normal(monthly, monthly * 0.1, 12)
+        months = [
+            "Jan","Feb","Mar","Apr","May","Jun",
+            "Jul","Aug","Sep","Oct","Nov","Dec"
+        ]
+
+        # Seasonal solar pattern
+        season_factor = [0.7, 0.75, 0.9, 1.0, 1.1, 1.2, 1.25, 1.2, 1.1, 0.95, 0.8, 0.7]
+
+        monthly_values = [monthly * f for f in season_factor]
 
         monthly_data = pd.DataFrame({
-            "Month": [
-                "Jan","Feb","Mar","Apr","May","Jun",
-                "Jul","Aug","Sep","Oct","Nov","Dec"
-            ],
+            "Month": months,
             "kWh": monthly_values
         })
 
@@ -190,7 +202,7 @@ Solar Report
 Annual Energy: {int(prediction)} kWh
 Monthly Energy: {int(monthly)} kWh
 Savings: ₹{int(savings)}
-CO2 Saved: {co2_saved:.2f} tons/year
+CO2 Saved: {(prediction * 0.0007):.2f} tons/year
 ROI: {roi_years:.1f} years
 """
 
