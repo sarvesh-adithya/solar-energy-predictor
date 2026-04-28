@@ -8,83 +8,47 @@ import joblib
 # -------------------------------
 model = joblib.load("solar_model.pkl")
 
-# -------------------------------
-# UI Title
-# -------------------------------
-st.set_page_config(page_title="Solar Predictor", layout="wide")
+st.set_page_config(page_title="Solar AI Predictor", layout="wide")
 
+# -------------------------------
+# HEADER
+# -------------------------------
 st.title("⚡ Smart Solar Output Prediction System")
-st.write("Enter system details to predict annual energy production")
+st.caption("AI-powered solar energy prediction with insights & analytics")
 
 # -------------------------------
-# INPUT SECTION (2 columns layout)
+# INPUT SECTION
 # -------------------------------
 col1, col2 = st.columns(2)
 
 with col1:
-    pv_size = st.number_input(
-        "PV System Size (kWac)",
-        min_value=1.0,
-        max_value=20.0,
-        value=5.0
-    )
-
-    dc_size = st.number_input(
-        "Estimated PV System Size (kWdc)",
-        min_value=1.0,
-        max_value=25.0,
-        value=6.0
-    )
-
-    storage = st.number_input(
-        "Storage Size (kWac)",
-        min_value=0.0,
-        max_value=20.0,
-        value=0.0
-    )
+    pv_size = st.number_input("PV System Size (kWac)", 1.0, 20.0, 5.0)
+    dc_size = st.number_input("Estimated PV Size (kWdc)", 1.0, 25.0, 6.0)
+    storage = st.number_input("Storage Size (kWac)", 0.0, 20.0, 0.0)
 
 with col2:
-    year = st.number_input(
-        "Interconnection Year",
-        min_value=2000,
-        max_value=2026,
-        value=2020
-    )
-
+    year = st.number_input("Interconnection Year", 2000, 2026, 2020)
     developer = st.selectbox(
         "Developer",
         [
-            "Kamtech Solar",
-            "SUNCO",
-            "Trinity Solar",
-            "Momentum Solar",
-            "NYS Essential",
-            "Patriot Energy",
-            "Sunrun Inc",
-            "Vivint Solar",
-            "SolarCity",
-            "Unknown"
+            "Kamtech Solar","SUNCO","Trinity Solar","Momentum Solar",
+            "NYS Essential","Patriot Energy","Sunrun Inc",
+            "Vivint Solar","SolarCity","Unknown"
         ]
     )
-
     zip_code = st.text_input("Zip Code", "11418")
 
 # -------------------------------
-# PREDICT BUTTON (ONLY ONE)
+# PREDICTION
 # -------------------------------
-if st.button("Predict", key="predict_button"):
+if st.button("🚀 Predict Energy Output"):
 
     try:
-        # -------------------------------
         # Feature Engineering
-        # -------------------------------
         dc_ac_ratio = dc_size / (pv_size + 1e-6)
         storage_ratio = storage / (pv_size + 1e-6)
         system_age = 2026 - year
 
-        # -------------------------------
-        # Create DataFrame (ALL columns)
-        # -------------------------------
         input_df = pd.DataFrame({
             'PV System Size (kWac)': [pv_size],
             'Estimated PV System Size (kWdc)': [dc_size],
@@ -93,7 +57,6 @@ if st.button("Predict", key="predict_button"):
             'Developer': [developer],
             'Zip': [zip_code],
 
-            # Default categorical values
             'Utility': ['Unknown'],
             'City/Town': ['Unknown'],
             'County': ['Unknown'],
@@ -102,7 +65,6 @@ if st.button("Predict", key="predict_button"):
             'Metering Method': ['NM'],
             'Number of Projects': [1],
 
-            # Engineered features
             'dc_ac_ratio': [dc_ac_ratio],
             'storage_ratio': [storage_ratio],
             'system_age': [system_age],
@@ -112,39 +74,59 @@ if st.button("Predict", key="predict_button"):
             'developer_performance': [0]
         })
 
-        # -------------------------------
-        # Prediction
-        # -------------------------------
         pred_log = model.predict(input_df)
         prediction = np.expm1(pred_log)[0]
-
-        # -------------------------------
-        # Display Results
-        # -------------------------------
-        st.success(f"⚡ Predicted Annual Energy Production: {int(prediction):,} kWh")
-
         monthly = prediction / 12
-        st.info(f"📅 Estimated Monthly Production: {int(monthly):,} kWh")
 
         # -------------------------------
-        # Simple Insight
+        # KPI DASHBOARD
+        # -------------------------------
+        c1, c2, c3 = st.columns(3)
+        c1.metric("⚡ Annual Output", f"{int(prediction):,} kWh")
+        c2.metric("📅 Monthly Output", f"{int(monthly):,} kWh")
+        c3.metric("🔋 System Size", f"{pv_size} kW")
+
+        # -------------------------------
+        # CO2 SAVINGS
+        # -------------------------------
+        co2_saved = prediction * 0.7 / 1000  # tons/year
+        st.success(f"🌱 CO₂ Saved: {co2_saved:.2f} tons/year")
+
+        # -------------------------------
+        # COST SAVINGS
+        # -------------------------------
+        savings = prediction * 0.12  # assume ₹ per kWh
+        st.info(f"💰 Estimated Yearly Savings: ₹{int(savings):,}")
+
+        # -------------------------------
+        # EFFICIENCY
+        # -------------------------------
+        efficiency = prediction / (pv_size * 365)
+        st.write(f"⚙️ Efficiency: {efficiency:.2f} kWh/kW/day")
+
+        # -------------------------------
+        # INSIGHT
         # -------------------------------
         if prediction < 4000:
-            st.warning("⚠️ Low energy production system")
+            st.warning("⚠️ Low production system")
         elif prediction < 8000:
-            st.info("ℹ️ Moderate energy production")
+            st.info("ℹ️ Moderate production system")
         else:
-            st.success("✅ High performing solar system")
+            st.success("🔥 High performance solar system")
 
         # -------------------------------
-        # Chart
+        # MONTHLY GRAPH
         # -------------------------------
-        chart_data = pd.DataFrame({
-            "Metric": ["Annual Output"],
-            "kWh": [prediction]
+        monthly_data = pd.DataFrame({
+            "Month": [
+                "Jan","Feb","Mar","Apr","May","Jun",
+                "Jul","Aug","Sep","Oct","Nov","Dec"
+            ],
+            "kWh": [monthly] * 12
         })
 
-        st.bar_chart(chart_data.set_index("Metric"))
+        st.subheader("📈 Monthly Production Trend")
+        st.line_chart(monthly_data.set_index("Month"))
 
     except Exception as e:
         st.error(f"❌ Error: {e}")
